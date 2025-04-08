@@ -205,13 +205,32 @@ fun RegisterScreen(navController: NavController, paddingValues: PaddingValues, d
         Button(
             onClick = {
                 nameError = if (name.isBlank()) "Nome é obrigatório" else ""
-                emailError = if (email.isBlank()) "E-mail é obrigatório" else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) "E-mail inválido" else ""
-                passwordError = if (password.isBlank()) "Senha é obrigatória" else ""
-                confirmPasswordError = if (confirmPassword.isBlank()) "Confirma senha é obrigatória" else (if(password != confirmPassword) "Senhas não coincidem" else "")
-                if(nameError.isEmpty() && emailError.isEmpty() && passwordError.isEmpty() && confirmPasswordError.isEmpty()){
-                    if (password == confirmPassword && email.isNotBlank() && name.isNotBlank()) {
-                        coroutineScope.launch {
-                            val userDao = database.userDao()
+                emailError = if (email.isBlank()) {
+                    "E-mail é obrigatório"
+                } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                    "E-mail inválido"
+                } else {
+                    ""
+                }
+                passwordError = when {
+                    password.isBlank() -> "Senha é obrigatória"
+                    password.length < 8 -> "Senha deve ter pelo menos 8 caracteres"
+                    else -> ""
+                }
+                confirmPasswordError = when {
+                    confirmPassword.isBlank() -> "Confirma senha é obrigatória"
+                    password != confirmPassword -> "Senhas não coincidem"
+                    else -> ""
+                }
+
+                if (nameError.isEmpty() && emailError.isEmpty() && passwordError.isEmpty() && confirmPasswordError.isEmpty()) {
+                    coroutineScope.launch {
+                        val userDao = database.userDao()
+                        val existingUser = userDao.getUserByEmail(email)
+
+                        if (existingUser != null) {
+                            emailError = "Este e-mail já está cadastrado"
+                        } else {
                             val newUser = User(name = name, email = email, password = password)
                             userDao.insertUser(newUser)
                             navController.navigate("login")
