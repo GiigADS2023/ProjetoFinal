@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Flight
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
@@ -60,8 +61,27 @@ fun AppNavigation(paddingValues: PaddingValues, database: UserDatabase) {
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(bottomStart = 15.dp, bottomEnd = 15.dp)),
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary),
-                    title = { Text(text = screenTitle) }
+                    title = { Text(text = screenTitle) },
+                    actions = {
+                        IconButton(onClick = {
+                            isAuthenticated = false
+                            userId = null
+                            navController.navigate("login") {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    inclusive = true
+                                }
+                                launchSingleTop = true
+                            }
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.ExitToApp,
+                                contentDescription = "Sair",
+                                tint = Color.Black
+                            )
+                        }
+                    }
                 )
+
             }
         },
         bottomBar = {

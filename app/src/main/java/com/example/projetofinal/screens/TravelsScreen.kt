@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.projetofinal.data.Travel
 import com.example.projetofinal.viewmodel.TravelViewModel
+import java.text.SimpleDateFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -113,6 +114,12 @@ fun TravelsScreen(navController: NavController, viewModel: TravelViewModel, user
         Button(
             onClick = {
                 if (destination.isNotBlank() && startDate.isNotBlank() && endDate.isNotBlank() && budget.isNotBlank()) {
+
+                    if (!isEndDateAfterStartDate(startDate, endDate)) {
+                        Toast.makeText(context, "A data final deve ser posterior ou igual à data de início.", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+
                     try {
                         val budgetDouble = budget.toDouble()
 
@@ -146,5 +153,16 @@ fun TravelsScreen(navController: NavController, viewModel: TravelViewModel, user
         ) {
             Text("Cadastrar")
         }
+    }
+}
+
+fun isEndDateAfterStartDate(start: String, end: String): Boolean {
+    return try {
+        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        val startParsed = sdf.parse(start)
+        val endParsed = sdf.parse(end)
+        endParsed != null && startParsed != null && !endParsed.before(startParsed)
+    } catch (e: Exception) {
+        false
     }
 }

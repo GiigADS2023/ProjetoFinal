@@ -22,7 +22,6 @@ fun HomeScreen(viewModel: TravelViewModel, userId: Int) {
     var travels by remember { mutableStateOf<List<Travel>>(emptyList()) }
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Verifica se o ID é válido antes de buscar
     LaunchedEffect(userId) {
         if (userId > 0) {
             travels = viewModel.getTravelsByUser(userId)
