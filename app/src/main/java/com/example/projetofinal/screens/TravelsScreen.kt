@@ -15,6 +15,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.projetofinal.data.Travel
+import com.example.projetofinal.utils.isEndDateAfterStartDate
 import com.example.projetofinal.viewmodel.TravelViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -121,7 +122,11 @@ fun TravelsScreen(navController: NavController, viewModel: TravelViewModel, user
                     }
 
                     try {
-                        val budgetDouble = budget.toDouble()
+                        val budgetDouble = budget.toDoubleOrNull()
+                        if (budgetDouble == null || budgetDouble < 0) {
+                            Toast.makeText(context, "Digite um valor numérico válido e positivo para o orçamento.", Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
 
                         val travel = Travel(
                             id = 0,
@@ -153,16 +158,5 @@ fun TravelsScreen(navController: NavController, viewModel: TravelViewModel, user
         ) {
             Text("Cadastrar")
         }
-    }
-}
-
-fun isEndDateAfterStartDate(start: String, end: String): Boolean {
-    return try {
-        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        val startParsed = sdf.parse(start)
-        val endParsed = sdf.parse(end)
-        endParsed != null && startParsed != null && !endParsed.before(startParsed)
-    } catch (e: Exception) {
-        false
     }
 }

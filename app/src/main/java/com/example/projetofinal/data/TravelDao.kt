@@ -18,4 +18,7 @@ interface TravelDao {
 
     @Update
     suspend fun updateTravel(travel: Travel)
+
+    @Query("SELECT * FROM travels WHERE id = :travelId LIMIT 1")
+    suspend fun getTravelById(travelId: Int): Travel?
 }

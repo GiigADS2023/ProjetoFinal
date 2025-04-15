@@ -124,12 +124,16 @@ fun AppNavigation(paddingValues: PaddingValues, database: UserDatabase) {
                 }
             }
             composable("Início") {
-                userId?.let { HomeScreen(viewModel = travelViewModel, userId = it) }
+                userId?.let { HomeScreen(navController, viewModel = travelViewModel, userId = it) }
             }
             composable("Nova viagem") {
                 userId?.let { TravelsScreen(navController, viewModel = travelViewModel, userId = it) }
             }
             composable("Sobre") { AboutScreen() }
+            composable("editTravel/{travelId}") { backStackEntry ->
+                val travelId = backStackEntry.arguments?.getString("travelId")?.toIntOrNull() ?: return@composable
+                EditTravelScreen(navController, viewModel = travelViewModel, travelId = travelId)
+            }
         }
     }
 }

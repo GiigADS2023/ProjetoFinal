@@ -15,10 +15,13 @@ import androidx.compose.ui.unit.dp
 import com.example.projetofinal.R
 import com.example.projetofinal.data.Travel
 import com.example.projetofinal.viewmodel.TravelViewModel
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(viewModel: TravelViewModel, userId: Int) {
+fun HomeScreen(navController: NavController, viewModel: TravelViewModel, userId: Int) {
     var travels by remember { mutableStateOf<List<Travel>>(emptyList()) }
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -40,7 +43,7 @@ fun HomeScreen(viewModel: TravelViewModel, userId: Int) {
             } else {
                 LazyColumn(modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = 16.dp)) {
+                    .padding(top = 16.dp, bottom = 80.dp)) {
 
                     items(travels, key = { it.id }) { travel ->
                         val dismissState = rememberSwipeToDismissBoxState()
@@ -68,7 +71,14 @@ fun HomeScreen(viewModel: TravelViewModel, userId: Int) {
                                 Card(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(8.dp),
+                                        .padding(8.dp)
+                                        .pointerInput(Unit) {
+                                            detectTapGestures(
+                                                onLongPress = {
+                                                    navController.navigate("editTravel/${travel.id}")
+                                                }
+                                            )
+                                        },
                                     elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                                 ) {
                                     Row(
@@ -99,9 +109,8 @@ fun HomeScreen(viewModel: TravelViewModel, userId: Int) {
                             }
                         )
 
-                        // Lógica de exclusão com Snackbar de confirmação
-                        LaunchedEffect(dismissState.currentValue) {
-                            if (dismissState.currentValue == SwipeToDismissBoxValue.StartToEnd) {
+                        LaunchedEffect(travel.id, dismissState.targetValue) {
+                            if (dismissState.targetValue == SwipeToDismissBoxValue.StartToEnd) {
                                 val result = snackbarHostState.showSnackbar(
                                     message = "Excluir viagem?",
                                     actionLabel = "Sim",

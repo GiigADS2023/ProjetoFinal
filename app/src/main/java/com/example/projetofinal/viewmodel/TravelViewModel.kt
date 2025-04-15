@@ -22,4 +22,14 @@ class TravelViewModel(private val repository: TravelRepository) : ViewModel() {
             repository.deleteTravel(travelId)
         }
     }
+
+    fun updateTravel(travel: Travel) {
+        viewModelScope.launch {
+            repository.updateTravel(travel)
+        }
+    }
+
+    suspend fun getTravelById(travelId: Int): Travel? {
+        return repository.getTravelById(travelId)
+    }
 }
