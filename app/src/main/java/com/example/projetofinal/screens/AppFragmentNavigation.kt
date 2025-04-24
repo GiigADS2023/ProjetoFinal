@@ -134,6 +134,12 @@ fun AppNavigation(paddingValues: PaddingValues, database: UserDatabase) {
                 val travelId = backStackEntry.arguments?.getString("travelId")?.toIntOrNull() ?: return@composable
                 EditTravelScreen(navController, viewModel = travelViewModel, travelId = travelId)
             }
+            composable("roteiroIA/{roteiro}") { backStackEntry ->
+                val roteiro = backStackEntry.arguments?.getString("roteiro") ?: ""
+                RoteiroIAScreen(roteiro = roteiro) {
+                    navController.popBackStack()
+                }
+            }
         }
     }
 }

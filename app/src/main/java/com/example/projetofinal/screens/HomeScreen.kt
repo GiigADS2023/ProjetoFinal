@@ -1,28 +1,32 @@
 package com.example.projetofinal.screens
 
+import android.net.Uri
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.projetofinal.R
 import com.example.projetofinal.data.Travel
 import com.example.projetofinal.viewmodel.TravelViewModel
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.navigation.NavController
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController, viewModel: TravelViewModel, userId: Int) {
     var travels by remember { mutableStateOf<List<Travel>>(emptyList()) }
+
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(userId) {
@@ -41,28 +45,37 @@ fun HomeScreen(navController: NavController, viewModel: TravelViewModel, userId:
             if (travels.isEmpty()) {
                 Text("Nenhuma viagem cadastrada.", modifier = Modifier.padding(top = 16.dp))
             } else {
-                LazyColumn(modifier = Modifier
-                    .fillMaxSize()
-                    .padding(top = 16.dp, bottom = 80.dp)) {
-
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = 16.dp, bottom = 80.dp)
+                ) {
                     items(travels, key = { it.id }) { travel ->
                         val dismissState = rememberSwipeToDismissBoxState()
+                        val coroutineScope = rememberCoroutineScope()
 
+                        // Swipe para deletar ou gerar roteiro
                         SwipeToDismissBox(
                             state = dismissState,
                             enableDismissFromStartToEnd = true,
-                            enableDismissFromEndToStart = false,
+                            enableDismissFromEndToStart = true,
                             backgroundContent = {
-                                if (dismissState.targetValue == SwipeToDismissBoxValue.StartToEnd) {
+                                val icon = when (dismissState.targetValue) {
+                                    SwipeToDismissBoxValue.StartToEnd -> Icons.Default.Delete
+                                    SwipeToDismissBoxValue.EndToStart -> Icons.Default.Description
+                                    else -> null
+                                }
+
+                                icon?.let {
                                     Box(
                                         modifier = Modifier
                                             .fillMaxSize()
                                             .padding(horizontal = 8.dp),
-                                        contentAlignment = Alignment.CenterStart
+                                        contentAlignment = if (icon == Icons.Default.Delete) Alignment.CenterStart else Alignment.CenterEnd
                                     ) {
                                         Icon(
-                                            imageVector = Icons.Default.Delete,
-                                            contentDescription = "Deletar"
+                                            imageVector = icon,
+                                            contentDescription = null
                                         )
                                     }
                                 }
@@ -93,7 +106,7 @@ fun HomeScreen(navController: NavController, viewModel: TravelViewModel, userId:
 
                                         Image(
                                             painter = painterResource(id = imageRes),
-                                            contentDescription = "Imagem do tipo de viagem",
+                                            contentDescription = null,
                                             modifier = Modifier
                                                 .size(48.dp)
                                                 .padding(end = 8.dp)
@@ -109,21 +122,38 @@ fun HomeScreen(navController: NavController, viewModel: TravelViewModel, userId:
                             }
                         )
 
-                        LaunchedEffect(travel.id, dismissState.targetValue) {
-                            if (dismissState.targetValue == SwipeToDismissBoxValue.StartToEnd) {
-                                val result = snackbarHostState.showSnackbar(
-                                    message = "Excluir viagem?",
-                                    actionLabel = "Sim",
-                                    withDismissAction = true,
-                                    duration = SnackbarDuration.Short
-                                )
-
-                                if (result == SnackbarResult.ActionPerformed) {
-                                    viewModel.deleteTravel(travel.id)
-                                    travels = travels.filter { it.id != travel.id }
-                                } else {
-                                    dismissState.snapTo(SwipeToDismissBoxValue.Settled)
+                        LaunchedEffect(dismissState.targetValue) {
+                            when (dismissState.targetValue) {
+                                SwipeToDismissBoxValue.StartToEnd -> {
+                                    val result = snackbarHostState.showSnackbar(
+                                        message = "Excluir viagem?",
+                                        actionLabel = "Sim",
+                                        withDismissAction = true,
+                                        duration = SnackbarDuration.Short
+                                    )
+                                    if (result == SnackbarResult.ActionPerformed) {
+                                        viewModel.deleteTravel(travel.id)
+                                        travels = travels.filter { it.id != travel.id }
+                                    } else {
+                                        dismissState.snapTo(SwipeToDismissBoxValue.Settled)
+                                    }
                                 }
+
+                                SwipeToDismissBoxValue.EndToStart -> {
+                                    coroutineScope.launch {
+                                        try {
+                                            val roteiro = viewModel.gerarRoteiroGemini(travel)
+                                            val encodedRoteiro = Uri.encode(roteiro)
+                                            navController.navigate("roteiroIA/$encodedRoteiro")
+                                        } catch (e: Exception) {
+                                            snackbarHostState.showSnackbar("Erro: ${e.localizedMessage}")
+                                        } finally {
+                                            dismissState.snapTo(SwipeToDismissBoxValue.Settled)
+                                        }
+                                    }
+                                }
+
+                                else -> Unit
                             }
                         }
                     }

@@ -41,6 +41,8 @@ android {
 }
 
 dependencies {
+    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
+
     implementation("com.airbnb.android:lottie-compose:6.0.0")
     implementation("androidx.navigation:navigation-compose:2.7.5")
     implementation("androidx.compose.material:material-icons-extended:1.5.0")
